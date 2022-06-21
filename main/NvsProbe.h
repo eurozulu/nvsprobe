@@ -5,10 +5,11 @@
 #ifndef NVSPROBE_H
 #define NVSPROBE_H
 
-#include <nvs.h>
-#include <string>
+#define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
+#define LOG_TAG_PROBE "NVS Probe"
+#include <esp_log.h>
+
 #include <list>
-#include "nvs_flash.h"
 #include "nvs_handle.hpp"
 
 typedef esp_err_t ERROR;
@@ -16,37 +17,57 @@ typedef esp_err_t ERROR;
 typedef nvs_type_t dataType;
 
 typedef struct {
-    const char *key;
+    std::string nameSpc;
+    std::string key;
     dataType type;
 } entry_t;
 
-class NvsProbe{
+class NvsProbe {
 public:
 
-    NvsProbe(const std::string &partition, const std::string &namespaceNm);
 
-    NvsProbe(const std::string &partition) : NvsProbe(partition, NULL){}
+    NvsProbe(std::string namespaceName, std::string partition);
 
-    NvsProbe() : NvsProbe(NULL, NULL){}
+    NvsProbe(std::string namespaceName) : NvsProbe(namespaceName, NVS_DEFAULT_PART_NAME) {}
+
+    NvsProbe() : NvsProbe("", NVS_DEFAULT_PART_NAME) {}
+
 
     virtual ~NvsProbe();
 
     std::string partitionName();
 
     std::string namespaceName();
+
     void setNamespaceName(std::string name);
 
-    void keys(std::list<entry_t> *entries);
+    void keys(std::list<entry_t> &entries);
 
-    ERROR readString(const char *key, char* out_str, size_t le);
-    ERROR writeString(const char *key, const char* value);
+    ERROR readString(const char *key, char *out_str, size_t le);
 
-    template<typename T> ERROR get_item(const char *key, T &value);
-    template<typename T> ERROR set_item(const char *key, T value);
+    ERROR writeString(const char *key, const char *value);
+
+    ERROR readItem(const char *key, int32_t &value);
+
+    ERROR writeItem(const char *key, int32_t value);
+
+    ERROR readItem(const char *key, uint32_t &value);
+
+    ERROR writeItem(const char *key, uint32_t value);
+
+    ERROR readItem(const char *key, uint64_t &value);
+
+    ERROR writeItem(const char *key, uint64_t value);
+
+    ERROR readBlob(const char *key, uint32_t *value, size_t &ln);
+
+    ERROR writeBlob(const char *key, uint32_t *value, size_t ln);
 
 private:
-    std::string partition;
-    std::string namespaceNm;
+    std::string partition = "";
+    std::string namespaceNm = "";
+
+    std::unique_ptr<nvs::NVSHandle> openHandle(nvs::NVSHandle *handle);
 };
 
 
